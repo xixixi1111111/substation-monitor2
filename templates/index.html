@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="变电站管理">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon-192x192.png">
+    <title>变电站机子信息管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .page {
+            display: none;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .substation-list {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .substation-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .substation-item:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+
+        .substation-item:active {
+            transform: scale(0.98);
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .add-substation {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .add-substation input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .install-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #fff;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .install-btn.show {
+            display: block;
+        }
+
+        .install-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            z-index: 999;
+            display: none;
+        }
+
+        .install-banner.show {
+            display: block;
+        }
+
+        .install-banner h3 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .install-banner p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .install-banner .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .install-banner .btn-install {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .install-banner .btn-later {
+            background: #f5f5f5;
+            color: #666;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .manual-install {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .manual-install h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .manual-install .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .manual-install .step-num {
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .manual-install .step-text {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .install-btn.show {
+            display: block;
+        }
+
+        .map-page {
+            padding: 10px;
+        }
+
+        .map-header {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .map-header h2 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .config-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .config-form input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .machine-grid {
+            display: grid;
+            gap: 10px;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .machine-cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f0f0f0;
+            position: relative;
+        }
+
+        .machine-cell:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .machine-cell.has-data {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .machine-cell .machine-icon {
+            font-size: 24px;
+        }
+
+        .back-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-bottom: 15px;
+        }
+
+        .machine-detail-page {
+            padding: 20px;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .detail-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .camera-preview {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .camera-preview.active {
+            display: block;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        #videoElement {
+            width: 100%;
+            display: block;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .camera-controls button {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-group input:disabled,
+        .form-group textarea:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: wait;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .image-preview {
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .image-preview.active {
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .sync-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .sync-status .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .sync-status .indicator.active {
+            background: #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .sync-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sync-actions .btn {
+            flex: 1;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            z-index: 2000;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeInOut 3s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        @media (max-width: 480px) {
+            .machine-cell {
+                width: 50px;
+                height: 50px;
+            }
+
+            .machine-cell .machine-icon {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="installBtn" class="install-btn" onclick="installApp()">
+        📱 一键安装
+    </button>
+
+    <div id="installBanner" class="install-banner">
+        <h3>📱 安装到手机桌面</h3>
+        <p>安装后像原生APP一样使用，无需每次打开浏览器</p>
+        <div class="btn-group">
+            <button class="btn-install" onclick="showManualInstall()">查看安装步骤</button>
+            <button class="btn-later" onclick="dismissInstall()">暂不安装</button>
+        </div>
+    </div>
+
+    <div id="manualInstallModal" class="install-banner" style="top: 0; bottom: auto; background: #667eea; color: white;">
+        <h3 style="color: white;">📱 安装步骤</h3>
+        
+        <div class="step" style="background: rgba(255,255,255,0.2);">
+            <div class="step-num" style="background: white; color: #667eea;">1</div>
+            <div class="step-text" id="modalIosStep1" style="display:none; color: white;">点击浏览器底部「分享」按钮 □</div>
+            <div class="step-text" id="modalAndroidStep1" style="color: white;">点击浏览器右上角「三个点」⋮</div>
+        </div>
+        
+        <div class="step" style="background: rgba(255,255,255,0.2);">
+            <div class="step-num" style="background: white; color: #667eea;">2</div>
+            <div class="step-text" id="modalIosStep2" style="display:none; color: white;">滑动找到「添加到主屏幕」并点击</div>
+            <div class="step-text" id="modalAndroidStep2" style="color: white;">点击「添加到主屏幕」或「安装应用」</div>
+        </div>
+        
+        <div class="step" style="background: rgba(255,255,255,0.2);">
+            <div class="step-num" style="background: white; color: #667eea;">3</div>
+            <div class="step-text" style="color: white;">点击右上角「添加」完成安装</div>
+        </div>
+        
+        <div class="btn-group" style="margin-top: 20px;">
+            <button class="btn-install" style="background: white; color: #667eea;" onclick="closeManualInstall()">我知道了</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div id="substationSelectPage" class="page active">
+        <div class="substation-select-page">
+            <div class="header">
+                <h1>变电站机子信息管理</h1>
+                <p>本地存储 · 离线可用</p>
+            </div>
+
+            <div class="manual-install">
+                <h3>📱 如何安装到手机桌面</h3>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-text" id="iosStep1" style="display:none">点击浏览器底部「分享」按钮 □</div>
+                    <div class="step-text" id="androidStep1">点击浏览器右上角「三个点」⋮</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-text" id="iosStep2" style="display:none">滑动找到「添加到主屏幕」并点击</div>
+                    <div class="step-text" id="androidStep2">点击「添加到主屏幕」或「安装应用」</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">点击右上角「添加」完成安装</div>
+                </div>
+            </div>
+
+            <div class="sync-panel">
+                <h3 style="margin-bottom: 15px;">📡 局域网同步</h3>
+                <div class="sync-status">
+                    <div id="syncIndicator" class="indicator"></div>
+                    <span id="syncStatusText">未连接</span>
+                </div>
+                <div class="sync-actions">
+                    <button class="btn btn-primary" id="hostBtn" onclick="startHost()">开始广播</button>
+                    <button class="btn btn-primary" id="connectBtn" onclick="showConnectDialog()">连接其他设备</button>
+                </div>
+                <div id="hostInfo" style="margin-top: 10px; font-size: 14px; color: #666; display: none;">
+                    <p>本机IP: <span id="localIP">获取中...</span></p>
+                    <p>设备ID: <span id="deviceId"></span></p>
+                </div>
+            </div>
+
+            <div class="substation-list" id="substationList">
+                <div class="loading">加载中...</div>
+            </div>
+            <div class="add-substation">
+                <input type="text" id="newSubstationName" placeholder="输入新变电站名称">
+                <button class="btn btn-primary" onclick="addSubstation()">添加变电站</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mapPage" class="page">
+        <div class="map-page">
+            <button class="btn back-btn" onclick="showPage('substationSelectPage')">← 返回</button>
+            <div class="map-header">
+                <h2 id="currentSubstationName">变电站名称</h2>
+                <div class="config-form">
+                    <input type="number" id="gridCols" placeholder="横向机子数" value="5" min="1" max="20">
+                    <input type="number" id="gridRows" placeholder="纵向机子数" value="5" min="1" max="20">
+                    <button class="btn btn-primary" onclick="generateGrid()" style="width: auto; padding: 8px 15px;">生成地图</button>
+                </div>
+            </div>
+            <div class="map-container">
+                <div class="machine-grid" id="machineGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="machineDetailPage" class="page">
+        <div class="machine-detail-page">
+            <button class="btn back-btn" onclick="showPage('mapPage')">← 返回</button>
+
+            <div class="detail-card">
+                <h3>拍照功能</h3>
+                <div class="camera-container" id="cameraContainer" style="display: none;">
+                    <video id="videoElement" autoplay></video>
+                </div>
+                <div class="camera-controls" id="cameraControls" style="display: none;">
+                    <button class="btn btn-primary" onclick="capturePhoto()">拍照</button>
+                    <button class="btn btn-danger" onclick="stopCamera()">取消</button>
+                </div>
+                <button class="btn btn-primary" onclick="startCamera()">打开摄像头</button>
+                <img id="capturedImage" class="camera-preview" alt="拍摄的照片">
+            </div>
+
+            <div class="detail-card">
+                <h3>机子信息</h3>
+                <div class="form-group">
+                    <label>机子名称</label>
+                    <input type="text" id="machineName" placeholder="输入机子名称">
+                </div>
+                <div class="form-group">
+                    <label>机子信息</label>
+                    <textarea id="machineInfo" placeholder="输入机子详细信息"></textarea>
+                </div>
+                <img id="savedImagePreview" class="image-preview" alt="保存的图片">
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="saveMachineInfo()">保存信息</button>
+                    <button class="btn btn-danger" onclick="clearMachineInfo()">清除信息</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/db.js"></script>
+    <script src="/static/sync.js"></script>
+    <script>
+        let currentSubstationId = null;
+        let currentMachineX = null;
+        let currentMachineY = null;
+        let currentMachine = null;
+        let stream = null;
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+
+            if (pageId === 'mapPage') {
+                loadMachines();
+            } else if (pageId === 'substationSelectPage') {
+                stopCamera();
+                loadSubstations();
+            }
+        }
+
+        async function loadSubstations() {
+            try {
+                const substations = await getAllSubstations();
+                const listEl = document.getElementById('substationList');
+
+                if (substations.length === 0) {
+                    listEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">暂无变电站，请添加</div>';
+                    return;
+                }
+
+                listEl.innerHTML = substations.map(s => `
+                    <div class="substation-item" onclick="selectSubstation(${s.id}, '${s.name}')">
+                        <span>${s.name}</span>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteSubstation(${s.id})">删除</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载变电站失败:', error);
+                document.getElementById('substationList').innerHTML =
+                    '<div style="text-align: center; padding: 20px; color: #f44336;">加载失败，请刷新重试</div>';
+            }
+        }
+
+        async function addSubstation() {
+            const name = document.getElementById('newSubstationName').value.trim();
+            if (!name) {
+                showToast('请输入变电站名称');
+                return;
+            }
+
+            try {
+                await addSubstation(name);
+                document.getElementById('newSubstationName').value = '';
+                await loadSubstations();
+                showToast('添加成功！');
+            } catch (error) {
+                showToast(error.message || '添加失败');
+            }
+        }
+
+        async function deleteSubstation(id) {
+            if (!confirm('确定要删除这个变电站及其所有机子信息吗？')) {
+                return;
+            }
+
+            try {
+                await deleteSubstation(id);
+                await loadSubstations();
+                showToast('删除成功');
+            } catch (error) {
+                showToast('删除失败');
+            }
+        }
+
+        function selectSubstation(id, name) {
+            currentSubstationId = id;
+            document.getElementById('currentSubstationName').textContent = name;
+            showPage('mapPage');
+            generateGrid();
+        }
+
+        function generateGrid() {
+            const cols = parseInt(document.getElementById('gridCols').value) || 5;
+            const rows = parseInt(document.getElementById('gridRows').value) || 5;
+            const gridEl = document.getElementById('machineGrid');
+
+            gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            gridEl.innerHTML = '';
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'machine-cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.innerHTML = '<div class="machine-icon">⚙️</div>';
+                    cell.onclick = () => openMachineDetail(x, y);
+                    gridEl.appendChild(cell);
+            }
+
+            loadMachines();
+        }
+
+        async function loadMachines() {
+            if (!currentSubstationId) return;
+
+            try {
+                const machines = await getMachinesBySubstationId(currentSubstationId);
+
+                document.querySelectorAll('.machine-cell').forEach(cell => {
+                    const x = parseInt(cell.dataset.x);
+                    const y = parseInt(cell.dataset.y);
+                    const machine = machines.find(m => m.positionX === x && m.positionY === y);
+
+                    if (machine && (machine.name || machine.info)) {
+                        cell.classList.add('has-data');
+                    } else {
+                        cell.classList.remove('has-data');
+                    }
+                });
+            } catch (error) {
+                console.error('加载机子信息失败:', error);
+            }
+        }
+
+        function openMachineDetail(x, y) {
+            currentMachineX = x;
+            currentMachineY = y;
+            showPage('machineDetailPage');
+            loadMachineInfo();
+        }
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                document.getElementById('videoElement').srcObject = stream;
+                document.getElementById('cameraContainer').style.display = 'block';
+                document.getElementById('cameraControls').style.display = 'flex';
+                document.getElementById('capturedImage').classList.remove('active');
+            } catch (error) {
+                console.error('无法访问摄像头:', error);
+                showToast('无法访问摄像头，请检查权限设置');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            document.getElementById('cameraContainer').style.display = 'none';
+            document.getElementById('cameraControls').style.display = 'none';
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('videoElement');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            const imageData = canvas.toDataURL('image/jpeg');
+            document.getElementById('capturedImage').src = imageData;
+            document.getElementById('capturedImage').classList.add('active');
+            document.getElementById('capturedImage').dataset.imageData = imageData;
+
+            stopCamera();
+        }
+
+        async function loadMachineInfo() {
+            if (currentSubstationId === null || currentMachineX === null || currentMachineY === null) return;
+
+            try {
+                const machine = await getMachineByPosition(currentSubstationId, currentMachineX, currentMachineY);
+
+                if (machine) {
+                    currentMachine = machine;
+                    document.getElementById('machineName').value = machine.name || '';
+                    document.getElementById('machineInfo').value = machine.info || '';
+
+                    if (machine.imageData) {
+                        const img = document.getElementById('savedImagePreview');
+                        img.src = machine.imageData;
+                        img.classList.add('active');
+                    } else {
+                        document.getElementById('savedImagePreview').classList.remove('active');
+                    }
+                } else {
+                    currentMachine = null;
+                    document.getElementById('machineName').value = '';
+                    document.getElementById('machineInfo').value = '';
+                    document.getElementById('savedImagePreview').classList.remove('active');
+                }
+            } catch (error) {
+                console.error('加载机子信息失败:', error);
+            }
+        }
+
+        async function saveMachineInfo() {
+            if (currentSubstationId === null || currentMachineX === null || currentMachineY === null) {
+                showToast('参数错误');
+                return;
+            }
+
+            const name = document.getElementById('machineName').value.trim();
+            const info = document.getElementById('machineInfo').value.trim();
+            const imageData = document.getElementById('capturedImage').dataset.imageData || null;
+
+            try {
+                await saveMachine(currentSubstationId, currentMachineX, currentMachineY, name, info, imageData);
+                showToast('保存成功！');
+
+                document.getElementById('capturedImage').classList.remove('active');
+                document.getElementById('capturedImage').dataset.imageData = '';
+
+                await loadMachineInfo();
+                await loadMachines();
+            } catch (error) {
+                console.error('保存失败:', error);
+                showToast('保存失败');
+            }
+        }
+
+        async function clearMachineInfo() {
+            if (!currentMachine) {
+                showToast('暂无信息可清除');
+                return;
+            }
+
+            if (!confirm('确定要清除这条机子信息吗？')) {
+                return;
+            }
+
+            try {
+                await deleteMachine(currentMachine.id);
+                showToast('清除成功');
+                await loadMachineInfo();
+                await loadMachines();
+            } catch (error) {
+                showToast('清除失败');
+            }
+        }
+
+        // 同步相关功能
+        async function startHost() {
+            try {
+                const result = await startBroadcast();
+                document.getElementById('syncIndicator').classList.add('active');
+                document.getElementById('syncStatusText').textContent = `广播中: ${result.ip}:${result.port}`;
+                document.getElementById('hostInfo').style.display = 'block';
+                document.getElementById('localIP').textContent = result.ip;
+                document.getElementById('deviceId').textContent = result.deviceId;
+                document.getElementById('hostBtn').textContent = '停止广播';
+                document.getElementById('hostBtn').onclick = stopHost;
+
+                setSyncCallbacks({
+                    onPeerConnected: (peerId) => {
+                        showToast(`新设备已连接: ${peerId}`);
+                    },
+                    onPeerDisconnected: (peerId) => {
+                        showToast(`设备已断开: ${peerId}`);
+                    },
+                    onSyncComplete: (success, error) => {
+                        if (success) {
+                            showToast('同步成功！');
+                            loadSubstations();
+                        } else {
+                            showToast('同步失败: ' + error);
+                        }
+                    }
+                });
+
+                showToast('开始广播，其他设备可连接');
+            } catch (error) {
+                showToast('启动广播失败');
+            }
+        }
+
+        function stopHost() {
+            stopBroadcast();
+            document.getElementById('syncIndicator').classList.remove('active');
+            document.getElementById('syncStatusText').textContent = '未连接';
+            document.getElementById('hostInfo').style.display = 'none';
+            document.getElementById('hostBtn').textContent = '开始广播';
+            document.getElementById('hostBtn').onclick = startHost;
+            showToast('已停止广播');
+        }
+
+        function showConnectDialog() {
+            const hostIP = prompt('请输入主机IP地址:');
+            if (hostIP && hostIP.trim()) {
+                requestSyncFrom(hostIP.trim()).then(success => {
+                    if (success) {
+                        document.getElementById('syncIndicator').classList.add('active');
+                        document.getElementById('syncStatusText').textContent = `已连接到: ${hostIP}`;
+                        showToast('连接成功！');
+                    } else {
+                        showToast('连接失败');
+                    }
+                });
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', async () => {
+            await loadSubstations();
+            registerServiceWorker();
+            checkIfInstalled();
+        });
+
+        let deferredPrompt;
+
+        function checkIfInstalled() {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return;
+            }
+
+            if ('serviceWorker' in navigator) {
+                setTimeout(() => {
+                    if (!deferredPrompt) {
+                        const installBtn = document.getElementById('installBtn');
+                        if (installBtn) {
+                            installBtn.classList.add('show');
+                        }
+                    }
+                }, 2000);
+            }
+        }
+
+        // 检测设备类型
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+        // 根据设备类型显示不同的安装步骤
+        if (isIOS) {
+            document.getElementById('iosStep1').style.display = 'block';
+            document.getElementById('androidStep1').style.display = 'none';
+            document.getElementById('iosStep2').style.display = 'block';
+            document.getElementById('androidStep2').style.display = 'none';
+        }
+
+        window.addEventListener('load', async () => {
+            await loadSubstations();
+            registerServiceWorker();
+
+            // 如果已经安装，隐藏安装提示
+            if (isStandalone) {
+                return;
+            }
+
+            // 立即显示安装提示
+            showInstallButton();
+        });
+
+        function dismissInstall() {
+            document.getElementById('installBanner').classList.remove('show');
+            // 保存选择，一周内不再显示
+            localStorage.setItem('installDismissed', Date.now());
+        }
+
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/static/service-worker.js');
+                    console.log('Service Worker注册成功:', registration.scope);
+                } catch (error) {
+                    console.log('Service Worker注册失败:', error);
+                }
+            }
+        }
+
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            if (isStandalone) {
+                return;
+            }
+
+            const installBtn = document.getElementById('installBtn');
+            const banner = document.getElementById('installBanner');
+            if (installBtn) {
+                installBtn.classList.add('show');
+            }
+            if (banner) {
+                banner.classList.add('show');
+            }
+        }
+
+        function showManualInstall() {
+            // 设置设备类型
+            if (isIOS) {
+                document.getElementById('modalIosStep1').style.display = 'block';
+                document.getElementById('androidStep1').style.display = 'none';
+                document.getElementById('modalIosStep2').style.display = 'block';
+                document.getElementById('androidStep2').style.display = 'none';
+            }
+            
+            document.getElementById('installBanner').classList.remove('show');
+            document.getElementById('manualInstallModal').classList.add('show');
+        }
+
+        function closeManualInstall() {
+            document.getElementById('manualInstallModal').classList.remove('show');
+        }
+
+        async function installApp() {
+            if (deferredPrompt) {
+                try {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log('用户选择:', outcome);
+                    if (outcome === 'accepted') {
+                        showToast('安装成功！应用已添加到主屏幕');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installBtn')?.classList.remove('show');
+                    document.getElementById('installBanner')?.classList.remove('show');
+                } catch (error) {
+                    console.error('安装失败:', error);
+                    showManualInstall();
+                }
+            } else {
+                showManualInstall();
+            }
+        }
+
+        function showManualInstallInstructions() {
+            if (isIOS) {
+                showToast('iPhone: 点击底部分享按钮 → 添加到主屏幕');
+            } else {
+                showToast('Android: 点击右上角菜单 → 添加到主屏幕');
+            }
+        }
+    </script>
+</body>
+</html>
